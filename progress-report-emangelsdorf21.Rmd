@@ -23,47 +23,33 @@ webpage <- read_html(url)
 
 
 ```
+
 ```{r}
 table <- html_node(webpage, "table")
-
-
 hof_data <- html_table(table, fill = TRUE)
 
 View(hof_data)
 ```
 
-
-
-
-```{r}
-colnames(hof_data) <- c("playerID", "yearID", "votedBy", "ballots", "needed", "votes", "inducted", "category", "needed_note")
-
-hof_data$yearID <- as.integer(hof_data$yearID)
-hof_data$ballots <- as.integer(hof_data$ballots)
-hof_data$needed <- as.integer(hof_data$needed)
-hof_data$votes <- as.integer(hof_data$votes)
-hof_data$inducted <- ifelse(hof_data$inducted == "Y", TRUE, FALSE)
-
-
-head(hof_data, 3)
-
-
-
-```
 ```{r}
 dfHof <- as.data.frame((hof_data))
 
 head(dfHof)
 ```
+
 ```{r}
-write.csv(tables[[1]], "temp.csv", row.names=FALSE)
-backin <- readr::read_csv("temp.csv", skip = 1, show_col_types =FALSE)
-head(backin, 3)
+
+# Adding missing columns
+dfHof$yearID <- c(2023)
+dfHof$ballots <- c(389)
+dfHof$needed <- c(292)
+
+# Removing columns
+dfHof <- subset(dfHof, select = -c(YoB,`%vote`,Yrs,WAR,WAR7,JAWS,HOFs,HOFm,Rk,Jpos,G,AB,R,H,HR,RBI,SB,BB,BA,OBP,SLG,OPS,`OPS+`,W,L,ERA,`ERA+`,WHIP,G,GS,SV,IP,SO) )
+HOF2023 <- subset(HOF2023, select = -c(G,H,HR,BB))
+
+
 ```
 
 
-```{r}
-library(dplyr)
-HallOfFame <- bind_rows(hof, dfHof)
-```
 
