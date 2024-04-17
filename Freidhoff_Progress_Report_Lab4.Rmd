@@ -11,6 +11,34 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r cars}
 library(rvest)
 library(Lahman)
+library(dplyr)
 head(HallOfFame)
+
+url <- "https://www.baseball-reference.com/awards/hof_2023.shtml"
+webpage <- read_html(url)
+
+
+table <- html_node(webpage, "table")
+
+# Parse the table into a data frame
+hof_data <- html_table(table, fill = TRUE)
+
+# View the data frame
+HOF2023 <- as.data.frame(hof_data)
+names(HOF2023) <- HOF2023[1,]
+HOF2023 <- HOF2023[-1,]
+
+# Adding missing columns
+HOF2023$yearID <- c(2023)
+HOF2023$ballots <- c(389)
+HOF2023$needed <- c(292)
+
+# Removing columns
+HOF2023 <- subset(HOF2023, select = -c(YoB,`%vote`,Yrs,WAR,WAR7,JAWS,HOFs,HOFm,Rk,Jpos,G,AB,R,H,HR,RBI,SB,BB,BA,OBP,SLG,OPS,`OPS+`,W,L,ERA,`ERA+`,WHIP,G,GS,SV,IP,SO) )
+HOF2023 <- subset(HOF2023, select = -c(G,H,HR,BB))
+
+
+
+
 ```
 
