@@ -29,3 +29,16 @@ hof %>%
   xlim(c(2000, 2022)) +
   ylab("Percent of votes")
 ```
+
+```{r}
+install.packages("rvest")
+library(rvest)
+
+
+url <- "https://www.baseball-reference.com/awards/hof_2023.shtml"
+webpage <- read_html(url)
+
+
+
+```
+
