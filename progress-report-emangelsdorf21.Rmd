@@ -12,10 +12,24 @@ webpage <- read_html(url)
 ```{r}
 table <- html_node(webpage, "table")
 
-# Parse the table into a data frame
+
 hof_data <- html_table(table, fill = TRUE)
 
-# View the data frame
 View(hof_data)
+```
+
+
+```{r}
+colnames(hof_data) <- c("playerID", "yearID", "votedBy", "ballots", "needed", "votes", "inducted", "category", "needed_note")
+
+head(hof_data, 3)
+
+
+
+```
+```{r}
+dfHof <- as.data.frame((hof_data))
+
+head(dfHof)
 ```
 
