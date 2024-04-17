@@ -1,3 +1,17 @@
+---
+title: "Progress Report"
+author: "Ethan Mangelsdorf"
+date: "2024-04-17"
+output: html_document
+---
+
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+hof <- Lahman::HallOfFame
+
+```
+
 ```{r}
 install.packages("rvest")
 library(rvest)
@@ -19,8 +33,17 @@ View(hof_data)
 ```
 
 
+
+
 ```{r}
 colnames(hof_data) <- c("playerID", "yearID", "votedBy", "ballots", "needed", "votes", "inducted", "category", "needed_note")
+
+hof_data$yearID <- as.integer(hof_data$yearID)
+hof_data$ballots <- as.integer(hof_data$ballots)
+hof_data$needed <- as.integer(hof_data$needed)
+hof_data$votes <- as.integer(hof_data$votes)
+hof_data$inducted <- ifelse(hof_data$inducted == "Y", TRUE, FALSE)
+
 
 head(hof_data, 3)
 
@@ -31,5 +54,16 @@ head(hof_data, 3)
 dfHof <- as.data.frame((hof_data))
 
 head(dfHof)
+```
+```{r}
+write.csv(tables[[1]], "temp.csv", row.names=FALSE)
+backin <- readr::read_csv("temp.csv", skip = 1, show_col_types =FALSE)
+head(backin, 3)
+```
+
+
+```{r}
+library(dplyr)
+HallOfFame <- bind_rows(hof, dfHof)
 ```
 
