@@ -7,4 +7,67 @@ output: github_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+
+library(rvest)
+url <- "https://www.baseball-reference.com/awards/hof_2023.shtml"
+html <- read_html(url)
+html
+
+tables <- html %>% html_table(fill=TRUE)
+tables %>% str()
+
+hof2023 <- tables[[1]]
+
+library(Lahman)
+View(HallOfFame)
+View(People)
 ```
+
+```{r}
+# Remove columns 13-39 from 2023 data
+hof2023 <- hof2023[, -c(13:39)]
+
+# Set the first row as column headers
+colnames(hof2023) <- as.character(hof2023[1, ])
+
+# Remove the first row
+hof2023 <- hof2023[-1, ]
+
+# Remove the first column
+hof2023 <- hof2023[, -1]
+
+# Add 'inducted' column based on condition of at least 292 votes
+hof2023$inducted <- ifelse(hof2023$Votes >= 292, "Y", "N")
+
+# Add 'yearID' column with every entry as 2023
+hof2023$yearID <- 2023
+
+# Create a single 'Name' column for the 'People' data set
+People$Name <- paste(People$nameFirst, People$nameLast, sep = " ")
+
+# Get the index of the 'Name' column
+name_index <- which(names(People) == "Name")
+
+# Move the 'Name' column to the first position
+People <- People[, c(name_index, setdiff(1:ncol(People), name_index))]
+
+```
+
+```{r}
+# Join the 'HallOfFame' & 'People' data sets by 'playerID'
+merged_data <- merge(People, HallOfFame, by = "playerID", all.x = TRUE)
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
