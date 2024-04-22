@@ -54,20 +54,67 @@ People <- People[, c(name_index, setdiff(1:ncol(People), name_index))]
 ```
 
 ```{r}
-# Join the 'HallOfFame' & 'People' data sets by 'playerID'
-merged_data <- merge(People, HallOfFame, by = "playerID", all.x = TRUE)
+# Merge 'HallOfFame' with 'People' based on 'playerID' to bring in the 'Name' column
+HallOfFame_People <- merge(HallOfFame, People[, c("playerID", "Name")], by = "playerID", all.x = TRUE)
+
+#Merge 'hof2023' with 'People' based on 'Name' to bring in the 'playerID' column
+hof2023_People <- merge(hof2023, People[, c("Name", "playerID")], by = "Name", all.x = TRUE)
+
+# Missing playerID values and corresponding Name values
+missing_values <- c("beltrca01", "rodrifr03", "heltoto01", "ethiean01", "arroybr01", "streehu01", "hardyjj01", "ellsbja01", "werthja01", "kentje01", "weaveje02", "peraljh01", "lackejo01", "cainma01", "napolmi01", "dickera01")
+corresponding_names <- c("Carlos Beltrán", "Francisco Rodríguez", "Todd Helton HOF", "X-Andre Ethier", "X-Bronson Arroyo", "X-Huston Street", "X-J.J. Hardy", "X-Jacoby Ellsbury", "X-Jayson Werth", "X-Jeff Kent", "X-Jered Weaver", "X-Jhonny Peralta", 
+"X-John Lackey", "X-Matt Cain", "X-Mike Napoli", "X-R.A. Dickey")
+
+# Add missing playerID values
+for (i in seq_along(missing_values)) {
+  hof2023_People$playerID[hof2023_People$Name == corresponding_names[i]] <- missing_values[i]
+}
 
 ```
 
 ```{r}
+# Convert 'Votes' column to numeric type
+hof2023_People$Votes <- as.numeric(hof2023_People$Votes)
+
+# Convert 'inducted' column to factor type
+hof2023_People$inducted <- as.factor(hof2023_People$inducted)
+
+# Rename the 'votes' column to 'Votes'
+names(HallOfFame_People)[names(HallOfFame_People) == "votes"] <- "Votes"
+
 
 ```
 
 ```{r}
+library(dplyr)
 
+hof2023_People <- hof2023_People %>% mutate(
+  yearID = 2023,
+  votedBy = "BBWAA",
+  ballots = 389,
+  needed = 292,
+  inducted = ifelse(Votes>=292, "Y", "N"),
+  category = NA, # don't know yet
+  needed_note = NA # not sure what would go here
+) %>% rename(
+  Votes = Votes
+)
 ```
 
 ```{r}
+# Remove desired columns
+hof2023_People <- hof2023_People %>% select(-'YoB', -'%vote', -'HOFm', -'HOFs', -'Yrs', -'WAR', -'WAR7', -'JAWS', -'Jpos')
 
+hof2023_People <- hof2023_People %>% select(-'Name')
+
+# Reorder columns based on the specified order
+hof2023_People <- hof2023_People[, c("playerID", "yearID", "votedBy", "ballots", "needed", "Votes", "inducted", "category", "needed_note")]
+
+hof2023_People <- hof2023_People %>%
+                   rename(votes = Votes)
+```
+
+```{r}
+HallOfFame_Updated <- rbind(HallOfFame, hof2023_People)
 ```
 
