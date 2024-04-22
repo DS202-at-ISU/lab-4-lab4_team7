@@ -116,5 +116,7 @@ hof2023_People <- hof2023_People %>%
 
 ```{r}
 HallOfFame_Updated <- rbind(HallOfFame, hof2023_People)
+
+HallOfFame_Updated
 ```
 
