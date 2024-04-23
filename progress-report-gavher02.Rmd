@@ -1,0 +1,74 @@
+---
+title: "progress-report-gavher02"
+output: html_document
+date: "2024-04-23"
+---
+
+```{r cars}
+library(rvest)
+library(Lahman)
+library(dplyr)
+head(HallOfFame)
+head(People)
+
+url <- "https://www.baseball-reference.com/awards/hof_2023.shtml"
+webpage <- read_html(url)
+
+
+table <- html_node(webpage, "table")
+
+
+# Parse the table into a data frame
+hof_data <- html_table(table, fill = TRUE)
+
+# View the data frame
+HOF23 <- as.data.frame(hof_data)
+names(HOF23) <- HOF23[1,]
+HOF23 <- HOF23[-1,]
+
+# Removing collumns
+HOF23 <- HOF23[, -c(13:39)]
+HOF23 <- subset(HOF23, select = -c(YoB,`%vote`,Yrs,WAR,WAR7,JAWS,HOFs,HOFm,Rk,Jpos) )
+
+
+# Adding playerId into the table
+# Merge 'HallOfFame' with 'People' based on 'playerID' to bring in the 'Name' column
+HallOfFame_People <- merge(HallOfFame, People[, c("playerID", "Name")], by = "playerID", all.x = TRUE)
+
+#Merge 'hof2023' with 'People' based on 'Name' to bring in the 'playerID' column
+HOF23_People <- merge(HOF23, People[, c("Name", "playerID")], by = "Name", all.x = TRUE)
+
+# Missing playerID values and corresponding Name values
+missing_values <- c("beltrca01", "rodrifr03", "heltoto01", "ethiean01", "arroybr01", "streehu01", "hardyjj01", "ellsbja01", "werthja01", "kentje01", "weaveje02", "peraljh01", "lackejo01", "cainma01", "napolmi01", "dickera01")
+
+corresponding_names <- c("Carlos Beltrán", "Francisco Rodríguez", "Todd Helton HOF", "X-Andre Ethier", "X-Bronson Arroyo", "X-Huston Street", "X-J.J. Hardy", "X-Jacoby Ellsbury", "X-Jayson Werth", "X-Jeff Kent", "X-Jered Weaver", "X-Jhonny Peralta", 
+"X-John Lackey", "X-Matt Cain", "X-Mike Napoli", "X-R.A. Dickey")
+
+# Add missing playerID values
+for (i in seq_along(missing_values)) {
+  HOF23_People$playerID[HOF23_People$Name == corresponding_names[i]] <- missing_values[i]
+}
+
+HOF23 <- merge(HOF23_People, People[, c("Name", "playerID")], by = "Name", all.x = TRUE)
+
+# Need to drop HOF23$PlayerID.y and rename playerID.x
+HOF23 <- subset(HOF23, select = -c(playerID.y))
+# Rename column "B" to "NewColumn"
+colnames(HOF23)[colnames(HOF23) == "playerID.x"] <- "playerID"
+
+HOF23 <- HOF23 %>% mutate(
+  yearID = 2023,
+  votedBy = "BBWAA",
+  ballots = 389,
+  needed = 292,
+  inducted = ifelse(Votes>=292, "Y", "N"),
+  category = NA, # don't know yet
+  needed_note = NA # not sure what would go here
+)
+
+# Reorder columns based on the specified order
+HOF23 <- HOF23[, c("playerID", "yearID", "votedBy", "ballots", "needed", "Votes", "inducted", "category", "needed_note")]
+
+head(HOF23)
+
+```
