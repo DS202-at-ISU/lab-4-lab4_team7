@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(rvest)
 library(Lahman)
 library(dplyr)
-head(HallOfFame)
+HallOfFame
 
 url <- "https://www.baseball-reference.com/awards/hof_2023.shtml"
 webpage <- read_html(url)
@@ -32,13 +32,107 @@ HOF2023 <- HOF2023[-1,]
 HOF2023$yearID <- c(2023)
 HOF2023$ballots <- c(389)
 HOF2023$needed <- c(292)
+HOF2023$category <- c("Player")
 
 # Removing columns
 HOF2023 <- subset(HOF2023, select = -c(YoB,`%vote`,Yrs,WAR,WAR7,JAWS,HOFs,HOFm,Rk,Jpos,G,AB,R,H,HR,RBI,SB,BB,BA,OBP,SLG,OPS,`OPS+`,W,L,ERA,`ERA+`,WHIP,G,GS,SV,IP,SO) )
 HOF2023 <- subset(HOF2023, select = -c(G,H,HR,BB))
 
+# Add 'inducted' column based on condition of at least 292 votes
+HOF2023$inducted <- ifelse(HOF2023$Votes >= 292, "Y", "N")
 
+
+HOF2023
+```
+
+```{r}
+# Create a single 'Name' column for the 'People' data set
+People$Name <- paste(People$nameFirst, People$nameLast, sep = " ")
+
+# Get the index of the 'Name' column
+name_index <- which(names(People) == "Name")
+
+# Move the 'Name' column to the first position
+People <- People[, c(name_index, setdiff(1:ncol(People), name_index))]
+
+# Merge 'HallOfFame' with 'People' based on 'playerID' to bring in the 'Name' column
+HallOfFame_People <- merge(HallOfFame, People[, c("playerID", "Name")], by = "playerID", all.x = TRUE)
+
+#Merge 'hof2023' with 'People' based on 'Name' to bring in the 'playerID' column
+HOF2023_People <- merge(HOF2023, People[, c("Name", "playerID")], by = "Name", all.x = TRUE)
+
+# Missing playerID values and corresponding Name values
+missing_values <- c("beltrca01", "rodrifr03", "heltoto01", "ethiean01", "arroybr01", "streehu01", "hardyjj01", "ellsbja01", "werthja01", "kentje01", "weaveje02", "peraljh01", "lackejo01", "cainma01", "napolmi01", "dickera01")
+corresponding_names <- c("Carlos Beltrán", "Francisco Rodríguez", "Todd Helton HOF", "X-Andre Ethier", "X-Bronson Arroyo", "X-Huston Street", "X-J.J. Hardy", "X-Jacoby Ellsbury", "X-Jayson Werth", "X-Jeff Kent", "X-Jered Weaver", "X-Jhonny Peralta", 
+"X-John Lackey", "X-Matt Cain", "X-Mike Napoli", "X-R.A. Dickey")
+
+# Add missing playerID values
+for (i in seq_along(missing_values)) {
+  HOF2023_People$playerID[HOF2023_People$Name == corresponding_names[i]] <- missing_values[i]
+}
+```
+
+```{r}
+# Convert 'Votes' column to numeric type
+hof2023_People$Votes <- as.numeric(hof2023_People$Votes)
+
+# Convert 'inducted' column to factor type
+hof2023_People$inducted <- as.factor(hof2023_People$inducted)
+
+# Rename the 'votes' column to 'Votes'
+names(HallOfFame_People)[names(HallOfFame_People) == "votes"] <- "Votes"
 
 
 ```
 
+
+```{r}
+library(dplyr)
+
+hof2023_People <- hof2023_People %>% mutate(
+  yearID = 2023,
+  votedBy = "BBWAA",
+  ballots = 389,
+  needed = 292,
+  inducted = ifelse(Votes>=292, "Y", "N"),
+  category = NA, # don't know yet
+  needed_note = NA # not sure what would go here
+) %>% rename(
+  Votes = Votes
+)
+```
+
+```{r}
+hof2023_People <- hof2023_People %>% select(-'Name')
+
+# Reorder columns based on the specified order
+hof2023_People <- hof2023_People[, c("playerID", "yearID", "votedBy", "ballots", "needed", "Votes", "inducted", "category", "needed_note")]
+
+hof2023_People <- hof2023_People %>%
+                   rename(votes = Votes)
+```
+
+```{r}
+HallOfFame_Updated <- rbind(HallOfFame, hof2023_People)
+
+HallOfFame_Updated
+```
+
+
+The process of this task began by initially loading in the base data frame of the Hall of Fame data for the bulk of the years. Next, we needed to scrape for 2023. Once we were able to grab the data frame for 2023, the challenge was then making the data frames similar. This meant dropping many unwanted columns from the 2023 data set. After this, we concluded with the rest of the data cleaning by dropping any other unwanted things, filling in blanks, changing data types and reformatting so that the column names were similar. It was finally time to merge the two data frames. Once this was done, we could start to visualize the data as done below.
+
+
+```{r}
+library(ggplot2)
+HallOfFame_Updated %>% 
+  ggplot(aes(x = yearID, fill = inducted)) +
+  geom_bar() +
+  xlim(c(1936, 2023))
+HallOfFame_Updated %>%
+  ggplot(aes(x=yearID, fill = inducted)) +
+  geom_bar() +
+  xlim(c(2021,2023))
+```
+
+
+The above visuals show the entire merged data set distinguishing the number of players inducted and those who were not. The second, single bar, shows the number of players inducted into the Hall of Fame in just 2023 compared to those who were not.
